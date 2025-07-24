@@ -1,11 +1,11 @@
+require('./env');
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const cors = require('cors'); // Import the cors package
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./middleware/errorHandler');
-
-require('./env');
 
 const authRoutes = require('./routes/authRoutes');
 const projectRoutes = require('./routes/projectRoutes');
