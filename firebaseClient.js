@@ -1,5 +1,5 @@
 const admin = require("firebase-admin");
-
+console.log('Firebase Private Key Env Var:', process.env.FIREBASE_ADMIN_PRIVATE_KEY); // Add this line
 const serviceAccount = {
   "type": "service_account",
   "project_id": process.env.FIREBASE_ADMIN_PROJECT_ID,
