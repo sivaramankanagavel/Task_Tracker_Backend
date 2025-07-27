@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const AppError = require("../utils/appError");
-const admin = require("../firebaseClient"); // <--- CHANGED THIS LINE
+const admin = require("../firebaseConfig"); // <--- CHANGED THIS LINE
 
 class AuthService {
   async emailLogin(email, password) {
@@ -22,7 +22,7 @@ class AuthService {
 
   async googleLogin(idToken) {
     try {
-      // This line now uses the 'admin' instance initialized by firebaseClient.js
+      // This line now uses the 'admin' instance initialized by firebaseConfig.js
       const decodedToken = await admin.auth().verifyIdToken(idToken); 
 
       const firebaseUser = {
@@ -73,10 +73,11 @@ class AuthService {
           email: user.email,
           role: user.role,
           profilePicture: user.profilePicture,
+          emailVerified: user.emailVerified,
         },
       };
     } catch (error) {
-      throw new AppError("Token generation failed: " + error.message, 500);
+      throw new AppError("Failed to generate user token: " + error.message, 500);
     }
   }
 }

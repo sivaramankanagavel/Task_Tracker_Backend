@@ -13,6 +13,8 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-const User = mongoose.models.User || mongoose.model('User', userSchema);
+// Simplify the export to always call mongoose.model
+// The global mock in setupTests.js will handle this correctly for tests.
+const User = mongoose.model('User', userSchema);
 
 module.exports = User;
