@@ -1,44 +1,40 @@
 const request = require('supertest');
-const app = require('../app'); // Ensure this points to your Express app
-const authMiddleware = require('../middleware/authMiddleware'); // This will now be the mocked version
+const app = require('../app');
+const authMiddleware = require('../middleware/authMiddleware');
 const AppError = require('../utils/appError');
 
 // Mock the entire authService module.
 jest.mock('../services/authService', () => ({
   emailLogin: jest.fn(),
   googleLogin: jest.fn(),
-  verifyToken: jest.fn(), // Keep this mocked as authService still uses it internally
+  verifyToken: jest.fn(),
 }));
-const authService = require('../services/authService'); // Now import the mocked module
+const authService = require('../services/authService');
 
 describe('Auth API', () => {
   // Define mock data
   const mockUser = {
-    _id: '60d0fe4f3a76a3b4b8b8b8b8', // Must match ID in setupTests.js mockUser
+    _id: '60d0fe4f3a76a3b4b8b8b8b8',
     name: 'Mock User',
     email: 'mock@example.com',
     role: 'USER',
-    emailVerified: true, // Add emailVerified for consistency if your User model has it
+    emailVerified: true,
   };
   const mockAdminUser = {
-    _id: '60d0fe4f3a76a3b4b8b8b8b9', // Must match ID in setupTests.js mockAdminUser
+    _id: '60d0fe4f3a76a3b4b8b8b8b9',
     name: 'Mock Admin',
     email: 'admin@example.com',
     role: 'ADMIN',
-    emailVerified: true, // Add emailVerified for consistency
+    emailVerified: true,
   };
-  const mockToken = 'valid_auth_token'; // Must match token in setupTests.js mock
-  const mockAdminToken = 'valid_admin_token'; // Must match token in setupTests.js mock
+  const mockToken = 'valid_auth_token';
+  const mockAdminToken = 'valid_admin_token';
 
   // Before each test, reset mocks and set up common mock behaviors
   beforeEach(() => {
-    jest.clearAllMocks(); // Clears all mock calls and instances
-
-    // Set up default mock implementations for authService methods
+    jest.clearAllMocks();
     authService.emailLogin.mockResolvedValue({ token: mockToken, user: mockUser });
     authService.googleLogin.mockResolvedValue({ token: mockToken, user: mockUser });
-    // authService.verifyToken is now primarily mocked by setupTests.js via authMiddleware.protect,
-    // but if any direct calls to authService.verifyToken are made, this mock will catch them.
     authService.verifyToken.mockResolvedValue({ id: mockUser._id, role: mockUser.role });
   });
 
@@ -101,9 +97,7 @@ describe('Auth API', () => {
   });
 
   describe('authMiddleware.protect', () => {
-    // We are now testing the mocked authMiddleware.protect from setupTests.js
-    // We don't need to import User or jwt here, as the mock handles it.
-    const { protect } = authMiddleware; // Get the mocked protect function
+    const { protect } = authMiddleware;
 
     let mockReq, mockRes, mockNext;
 
@@ -128,7 +122,7 @@ describe('Auth API', () => {
       // Expect req.user to be set by the mock in setupTests.js
       expect(mockReq.user).toEqual(mockUser);
       expect(mockNext).toHaveBeenCalledTimes(1);
-      expect(mockNext).toHaveBeenCalledWith(); // Called without arguments (no error)
+      expect(mockNext).toHaveBeenCalledWith();
     });
 
     it('should return 401 if no token is provided', async () => {
@@ -162,15 +156,14 @@ describe('Auth API', () => {
   });
 
   describe('authMiddleware.restrictTo', () => {
-    // We are now testing the mocked authMiddleware.restrictTo from setupTests.js
-    const { restrictTo } = authMiddleware; // Get the mocked restrictTo function
+    const { restrictTo } = authMiddleware;
 
     let mockReq, mockRes, mockNext;
 
     beforeEach(() => {
       jest.clearAllMocks();
       mockReq = {
-        user: {}, // Will be set by individual tests
+        user: {},
       };
       mockRes = {
         status: jest.fn().mockReturnThis(),
@@ -180,12 +173,12 @@ describe('Auth API', () => {
     });
 
     it('should allow access for ADMIN role to admin-only route', () => {
-      mockReq.user = mockAdminUser; // Set admin user directly for restrictTo test
+      mockReq.user = mockAdminUser;
       const middleware = restrictTo('ADMIN');
       middleware(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledTimes(1);
-      expect(mockNext).toHaveBeenCalledWith(); // Called without arguments (no error)
+      expect(mockNext).toHaveBeenCalledWith();
     });
 
     it('should deny access for non-ADMIN role to admin-only route', () => {
@@ -200,12 +193,12 @@ describe('Auth API', () => {
     });
 
     it('should allow access for USER role to user-allowed route', () => {
-      mockReq.user = mockUser; // Set regular user
-      const middleware = restrictTo('USER', 'ADMIN'); // USER is an allowed role
+      mockReq.user = mockUser;
+      const middleware = restrictTo('USER', 'ADMIN');
       middleware(mockReq, mockRes, mockNext);
 
       expect(mockNext).toHaveBeenCalledTimes(1);
-      expect(mockNext).toHaveBeenCalledWith(); // Called without arguments (no error)
+      expect(mockNext).toHaveBeenCalledWith();
     });
   });
 });
