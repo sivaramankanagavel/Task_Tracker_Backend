@@ -1,8 +1,8 @@
 const request = require('supertest');
-const app = require('../app'); // Ensure this points to your Express app
-const projectService = require('../services/projectService'); // This will be the mocked version
+const app = require('../app');
+const projectService = require('../services/projectService');
 const AppError = require('../utils/appError');
-const mongoose = require('mongoose'); // Import mongoose for ObjectId
+const mongoose = require('mongoose');
 
 // Mock the entire projectService module
 jest.mock('../services/projectService', () => ({
@@ -17,9 +17,9 @@ jest.mock('../services/projectService', () => ({
 
 describe('Project API', () => {
   // Define mock data
-  const mockUserId = '60d0fe4f3a76a3b4b8b8b8b8'; // Must match mockUser._id in setupTests.js
+  const mockUserId = '60d0fe4f3a76a3b4b8b8b8b8';
   const mockProjectId = '60d0fe4f3a76a3b4b8b8b8c0';
-  const mockMemberId = '60d0fe4f3a76a3b4b8b8b8b9'; // Example member ID
+  const mockMemberId = '60d0fe4f3a76a3b4b8b8b8b9';
 
   const mockProject = {
     _id: mockProjectId,
@@ -42,17 +42,15 @@ describe('Project API', () => {
     },
   ];
 
-  const mockToken = 'valid_auth_token'; // Token for mockUserId from setupTests.js
+  const mockToken = 'valid_auth_token';
 
   beforeEach(() => {
-    jest.clearAllMocks(); // Clear mocks before each test
-
-    // Default mock implementations for projectService
+    jest.clearAllMocks();
     projectService.getUserProjects.mockResolvedValue(mockProjects);
     projectService.getProjectById.mockResolvedValue(mockProject);
     projectService.createProject.mockResolvedValue(mockProject);
     projectService.updateProject.mockResolvedValue({ ...mockProject, name: 'Updated Project' });
-    projectService.deleteProject.mockResolvedValue(null); // delete usually returns void or null
+    projectService.deleteProject.mockResolvedValue(null);
     projectService.addMembers.mockResolvedValue({ ...mockProject, members: [...mockProject.members, mockMemberId] });
     projectService.removeMember.mockResolvedValue({ ...mockProject, members: [] });
   });
@@ -65,12 +63,10 @@ describe('Project API', () => {
 
       expect(res.statusCode).toEqual(200);
       expect(res.body).toEqual(mockProjects);
-      // Ensure ownerId is passed correctly from req.user._id which is set by the mocked authMiddleware
       expect(projectService.getUserProjects).toHaveBeenCalledWith(mockUserId);
     });
 
     it('should return 500 if fetching projects fails', async () => {
-      // Mock the service to throw an error
       projectService.getUserProjects.mockRejectedValue(new AppError('Failed to fetch projects', 500));
 
       const res = await request(app)
@@ -124,7 +120,7 @@ describe('Project API', () => {
     };
 
     it('should create a new project', async () => {
-      projectService.createProject.mockResolvedValue(createdProject); // Ensure mock returns the full object with ID
+      projectService.createProject.mockResolvedValue(createdProject);
 
       const res = await request(app)
         .post('/api/v1/projects')
@@ -133,7 +129,6 @@ describe('Project API', () => {
 
       expect(res.statusCode).toEqual(201);
       expect(res.body).toEqual(createdProject);
-      // Ensure ownerId is passed correctly from req.user._id
       expect(projectService.createProject).toHaveBeenCalledWith({ ...newProjectData, ownerId: mockUserId });
     });
 
@@ -144,12 +139,12 @@ describe('Project API', () => {
       const res = await request(app)
         .post('/api/v1/projects')
         .set('Authorization', `Bearer ${mockToken}`)
-        .send({}); // Send empty data to trigger validation error
+        .send({});
 
       expect(res.statusCode).toEqual(400);
       expect(res.body.status).toEqual('fail');
       expect(res.body.message).toEqual('Failed to create project');
-      expect(projectService.createProject).toHaveBeenCalledWith({ ownerId: mockUserId }); // Expect it to be called with whatever was sent + ownerId
+      expect(projectService.createProject).toHaveBeenCalledWith({ ownerId: mockUserId });
     });
   });
 
@@ -158,7 +153,7 @@ describe('Project API', () => {
     const updatedProject = { ...mockProject, ...updateData };
 
     it('should update an existing project', async () => {
-      projectService.updateProject.mockResolvedValue(updatedProject); // Ensure mock returns the updated object
+      projectService.updateProject.mockResolvedValue(updatedProject);
 
       const res = await request(app)
         .put(`/api/v1/projects/${mockProjectId}`)
@@ -188,14 +183,14 @@ describe('Project API', () => {
 
   describe('DELETE /api/v1/projects/:id', () => {
     it('should delete a project', async () => {
-      projectService.deleteProject.mockResolvedValue(null); // Simulate successful deletion
+      projectService.deleteProject.mockResolvedValue(null);
 
       const res = await request(app)
         .delete(`/api/v1/projects/${mockProjectId}`)
         .set('Authorization', `Bearer ${mockToken}`);
 
       expect(res.statusCode).toEqual(204);
-      expect(res.body).toEqual({}); // 204 No Content typically has an empty body
+      expect(res.body).toEqual({});
       expect(projectService.deleteProject).toHaveBeenCalledWith(mockProjectId);
     });
 

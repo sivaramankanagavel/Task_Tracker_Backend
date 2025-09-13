@@ -1,9 +1,8 @@
 const request = require('supertest');
-const app = require('../app'); // Ensure this points to your Express app
-const userService = require('../services/userService'); // This will be the mocked version
+const app = require('../app');
+const userService = require('../services/userService');
 const AppError = require('../utils/appError');
 
-// Mock the entire userService module
 jest.mock('../services/userService', () => ({
   getAllUsers: jest.fn(),
   getUserById: jest.fn(),
@@ -14,8 +13,8 @@ jest.mock('../services/userService', () => ({
 
 describe('User API', () => {
   // Define mock data
-  const mockUserId = '60d0fe4f3a76a3b4b8b8b8b8'; // Must match mockUser._id in setupTests.js
-  const mockAdminId = '60d0fe4f3a76a3b4b8b8b8b9'; // Must match mockAdminUser._id in setupTests.js
+  const mockUserId = '60d0fe4f3a76a3b4b8b8b8b8';
+  const mockAdminId = '60d0fe4f3a76a3b4b8b8b8b9';
 
   const mockUser = {
     _id: mockUserId,
@@ -35,25 +34,23 @@ describe('User API', () => {
 
   const mockUsers = [mockUser, mockAdminUser];
 
-  const mockToken = 'valid_auth_token'; // Token for mockUserId from setupTests.js
-  const mockAdminToken = 'valid_admin_token'; // Token for mockAdminId from setupTests.js
+  const mockToken = 'valid_auth_token';
+  const mockAdminToken = 'valid_admin_token';
 
   beforeEach(() => {
-    jest.clearAllMocks(); // Clear mocks before each test
-
-    // Default mock implementations for userService
+    jest.clearAllMocks();
     userService.getAllUsers.mockResolvedValue(mockUsers);
     userService.getUserById.mockResolvedValue(mockUser);
     userService.createUser.mockResolvedValue(mockUser);
     userService.updateUser.mockResolvedValue({ ...mockUser, name: 'Updated User' });
-    userService.deleteUser.mockResolvedValue(null); // delete usually returns void or null
+    userService.deleteUser.mockResolvedValue(null);
   });
 
   describe('GET /api/v1/users', () => {
     it('should get all users for ADMIN role', async () => {
       const res = await request(app)
         .get('/api/v1/users')
-        .set('Authorization', `Bearer ${mockAdminToken}`); // Use admin token
+        .set('Authorization', `Bearer ${mockAdminToken}`);
 
       expect(res.statusCode).toEqual(200);
       expect(res.body).toEqual(mockUsers);
@@ -63,12 +60,12 @@ describe('User API', () => {
     it('should return 403 if non-ADMIN tries to get all users', async () => {
       const res = await request(app)
         .get('/api/v1/users')
-        .set('Authorization', `Bearer ${mockToken}`); // Use non-admin token
+        .set('Authorization', `Bearer ${mockToken}`);
 
       expect(res.statusCode).toEqual(403);
       expect(res.body.status).toEqual('fail');
       expect(res.body.message).toEqual('You do not have permission to perform this action');
-      expect(userService.getAllUsers).not.toHaveBeenCalled(); // Should not call service if restricted
+      expect(userService.getAllUsers).not.toHaveBeenCalled();
     });
 
     it('should return 500 if fetching users fails', async () => {
@@ -76,7 +73,7 @@ describe('User API', () => {
 
       const res = await request(app)
         .get('/api/v1/users')
-        .set('Authorization', `Bearer ${mockAdminToken}`); // Must be admin to access this route
+        .set('Authorization', `Bearer ${mockAdminToken}`);
 
       expect(res.statusCode).toEqual(500);
       expect(res.body.status).toEqual('error');
@@ -127,7 +124,7 @@ describe('User API', () => {
 
       const res = await request(app)
         .post('/api/v1/users')
-        .set('Authorization', `Bearer ${mockAdminToken}`) // Only ADMIN can create users
+        .set('Authorization', `Bearer ${mockAdminToken}`)
         .send(newUserData);
 
       expect(res.statusCode).toEqual(201);
@@ -138,7 +135,7 @@ describe('User API', () => {
     it('should return 403 if non-ADMIN tries to create a user', async () => {
       const res = await request(app)
         .post('/api/v1/users')
-        .set('Authorization', `Bearer ${mockToken}`) // Non-admin token
+        .set('Authorization', `Bearer ${mockToken}`)
         .send(newUserData);
 
       expect(res.statusCode).toEqual(403);
@@ -152,8 +149,8 @@ describe('User API', () => {
 
       const res = await request(app)
         .post('/api/v1/users')
-        .set('Authorization', `Bearer ${mockAdminToken}`) // Must be admin
-        .send({}); // Send empty data to trigger validation error
+        .set('Authorization', `Bearer ${mockAdminToken}`)
+        .send({});
 
       expect(res.statusCode).toEqual(400);
       expect(res.body.status).toEqual('fail');
@@ -171,7 +168,7 @@ describe('User API', () => {
 
       const res = await request(app)
         .put(`/api/v1/users/${mockUserId}`)
-        .set('Authorization', `Bearer ${mockToken}`) // User can update their own profile
+        .set('Authorization', `Bearer ${mockToken}`)
         .send(updateData);
 
       expect(res.statusCode).toEqual(200);
@@ -200,17 +197,17 @@ describe('User API', () => {
 
       const res = await request(app)
         .delete(`/api/v1/users/${mockUserId}`)
-        .set('Authorization', `Bearer ${mockAdminToken}`); // Only ADMIN can delete users
+        .set('Authorization', `Bearer ${mockAdminToken}`);
 
       expect(res.statusCode).toEqual(204);
-      expect(res.body).toEqual({}); // 204 No Content typically has an empty body
+      expect(res.body).toEqual({});
       expect(userService.deleteUser).toHaveBeenCalledWith(mockUserId);
     });
 
     it('should return 403 if non-ADMIN tries to delete a user', async () => {
       const res = await request(app)
         .delete(`/api/v1/users/${mockUserId}`)
-        .set('Authorization', `Bearer ${mockToken}`); // Non-admin token
+        .set('Authorization', `Bearer ${mockToken}`);
 
       expect(res.statusCode).toEqual(403);
       expect(res.body.status).toEqual('fail');
@@ -223,7 +220,7 @@ describe('User API', () => {
 
       const res = await request(app)
         .delete(`/api/v1/users/nonexistentid`)
-        .set('Authorization', `Bearer ${mockAdminToken}`); // Must be admin
+        .set('Authorization', `Bearer ${mockAdminToken}`);
 
       expect(res.statusCode).toEqual(404);
       expect(res.body.status).toEqual('fail');

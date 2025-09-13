@@ -1,8 +1,8 @@
 const request = require('supertest');
-const app = require('../app'); // Ensure this points to your Express app
-const taskService = require('../services/taskService'); // This will be the mocked version
+const app = require('../app');
+const taskService = require('../services/taskService');
 const AppError = require('../utils/appError');
-const mongoose = require('mongoose'); // Import mongoose for ObjectId
+const mongoose = require('mongoose');
 
 // Mock the entire taskService module
 jest.mock('../services/taskService', () => ({
@@ -17,10 +17,10 @@ jest.mock('../services/taskService', () => ({
 
 describe('Task API', () => {
   // Define mock data
-  const mockUserId = '60d0fe4f3a76a3b4b8b8b8b8'; // Must match mockUser._id in setupTests.js
-  const mockAssigneeId = '60d0fe4f3a76a3b4b8b8b8b9'; // Must match mockAdminUser._id in setupTests.js (or another mock user)
+  const mockUserId = '60d0fe4f3a76a3b4b8b8b8b8';
+  const mockAssigneeId = '60d0fe4f3a76a3b4b8b8b8b9';
   const mockProjectId = '60d0fe4f3a76a3b4b8b8b8c0';
-  const mockTaskId = 'task1'; // Using a string for simplicity in tests
+  const mockTaskId = 'task1';
 
   const mockTask = {
     _id: mockTaskId,
@@ -47,18 +47,16 @@ describe('Task API', () => {
     },
   ];
 
-  const mockToken = 'valid_auth_token'; // Token for mockUserId from setupTests.js
-  const mockAssigneeToken = 'valid_admin_token'; // Assuming mockAssigneeId uses admin token for simplicity in tests
+  const mockToken = 'valid_auth_token';
+  const mockAssigneeToken = 'valid_admin_token';
 
   beforeEach(() => {
-    jest.clearAllMocks(); // Clear mocks before each test
-
-    // Default mock implementations for taskService
+    jest.clearAllMocks();
     taskService.getAllTasks.mockResolvedValue(mockTasks);
     taskService.getTaskById.mockResolvedValue(mockTask);
     taskService.createTask.mockResolvedValue(mockTask);
     taskService.updateTask.mockResolvedValue({ ...mockTask, status: 'IN_PROGRESS' });
-    taskService.deleteTask.mockResolvedValue(null); // delete usually returns void or null
+    taskService.deleteTask.mockResolvedValue(null);
     taskService.getTasksByProject.mockResolvedValue([mockTask]);
     taskService.getTasksByAssignee.mockResolvedValue([mockTask]);
   });
@@ -123,7 +121,7 @@ describe('Task API', () => {
     const createdTask = {
       _id: 'newTaskId',
       ...newTaskData,
-      ownerId: mockUserId, // ownerId comes from req.user._id
+      ownerId: mockUserId,
       status: 'NOT_STARTED',
       createdAt: new Date().toISOString(),
     };
@@ -138,7 +136,6 @@ describe('Task API', () => {
 
       expect(res.statusCode).toEqual(201);
       expect(res.body).toEqual(createdTask);
-      // Ensure ownerId is passed correctly from req.user._id
       expect(taskService.createTask).toHaveBeenCalledWith({ ...newTaskData, ownerId: mockUserId });
     });
 
@@ -148,12 +145,11 @@ describe('Task API', () => {
       const res = await request(app)
         .post('/api/v1/tasks')
         .set('Authorization', `Bearer ${mockToken}`)
-        .send({}); // Send empty data to trigger validation error
+        .send({});
 
       expect(res.statusCode).toEqual(400);
       expect(res.body.status).toEqual('fail');
       expect(res.body.message).toEqual('Failed to create task: Missing fields');
-      // Expect it to be called with whatever was sent + ownerId
       expect(taskService.createTask).toHaveBeenCalledWith({ ownerId: mockUserId });
     });
   });
@@ -167,7 +163,7 @@ describe('Task API', () => {
 
       const res = await request(app)
         .put(`/api/v1/tasks/${mockTaskId}`)
-        .set('Authorization', `Bearer ${mockToken}`) // User is owner
+        .set('Authorization', `Bearer ${mockToken}`)
         .send(updateData);
 
       expect(res.statusCode).toEqual(200);
@@ -180,7 +176,7 @@ describe('Task API', () => {
 
       const res = await request(app)
         .put(`/api/v1/tasks/${mockTaskId}`)
-        .set('Authorization', `Bearer ${mockAssigneeToken}`) // User is assignee
+        .set('Authorization', `Bearer ${mockAssigneeToken}`)
         .send(updateData);
 
       expect(res.statusCode).toEqual(200);
@@ -189,12 +185,8 @@ describe('Task API', () => {
     });
 
     it('should return 403 if not authorized to update task', async () => {
-      // Simulate a user who is neither owner nor assignee
       const unauthorizedUserId = '60d0fe4f3a76a3b4b8b8b8f0';
-      const unauthorizedToken = 'unauthorized_token'; // Add this to setupTests.js if needed
-
-      // Temporarily mock authMiddleware.protect for this specific test
-      // to set an unauthorized user.
+      const unauthorizedToken = 'unauthorized_token';
       const originalProtect = require('../middleware/authMiddleware').protect;
       require('../middleware/authMiddleware').protect.mockImplementationOnce((req, res, next) => {
         req.user = { _id: unauthorizedUserId, role: 'USER' };
@@ -238,19 +230,16 @@ describe('Task API', () => {
 
       const res = await request(app)
         .delete(`/api/v1/tasks/${mockTaskId}`)
-        .set('Authorization', `Bearer ${mockToken}`); // User is owner
+        .set('Authorization', `Bearer ${mockToken}`);
 
       expect(res.statusCode).toEqual(204);
-      expect(res.body).toEqual({}); // 204 No Content typically has an empty body
+      expect(res.body).toEqual({});
       expect(taskService.deleteTask).toHaveBeenCalledWith(mockTaskId, mockUserId);
     });
 
     it('should return 403 if not authorized to delete task', async () => {
-      // Simulate a user who is not the owner
       const unauthorizedUserId = '60d0fe4f3a76a3b4b8b8b8f0';
-      const unauthorizedToken = 'unauthorized_token'; // Add this to setupTests.js if needed
-
-      // Temporarily mock authMiddleware.protect for this specific test
+      const unauthorizedToken = 'unauthorized_token';
       const originalProtect = require('../middleware/authMiddleware').protect;
       require('../middleware/authMiddleware').protect.mockImplementationOnce((req, res, next) => {
         req.user = { _id: unauthorizedUserId, role: 'USER' };
@@ -267,8 +256,6 @@ describe('Task API', () => {
       expect(res.body.status).toEqual('fail');
       expect(res.body.message).toEqual('Not authorized to delete this task');
       expect(taskService.deleteTask).toHaveBeenCalledWith(mockTaskId, unauthorizedUserId);
-
-      // Restore original mock after test
       require('../middleware/authMiddleware').protect = originalProtect;
     });
 
