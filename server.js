@@ -17,7 +17,7 @@ const app = express();
 // CORS Configuration
 // For production, you should restrict origins for security:
 app.use(cors({
-  origin: ['http://localhost:3000'], // Replace with your actual frontend domains
+  origin: ['http://localhost:3000', 'http://44.223.17.229', 'http://localhost:5173'], // Replace with your actual frontend domains
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Allowed HTTP methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
   credentials: true // Allow cookies to be sent with requests
@@ -32,10 +32,7 @@ app.use(cookieParser());
 const DB = process.env.MONGODB_URI;
 
 mongoose
-  .connect(DB, {
-    useNewUrlParser: true, // Deprecated, but kept for compatibility with older Mongoose versions
-    useUnifiedTopology: true, // Deprecated, but kept for compatibility with older Mongoose versions
-  })
+  .connect(DB)
   .then(() => console.log('DB connection successful!'))
   .catch((err) => console.error('DB connection error:', err));
 
