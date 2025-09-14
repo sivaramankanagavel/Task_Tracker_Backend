@@ -5,8 +5,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   role: {
     type: String,
-    enum: ['ADMIN', 'TASK_CREATOR', 'READ_ONLY_USER', 'USER'],
-    default: 'USER'
+    enum: ['ADMIN', 'TASK_CREATOR', 'READ_ONLY_USER'],
+    default: 'READ_ONLY_USER'
   },
   emailVerified: { type: Boolean, default: false },
   oauthProviderId: { type: String },

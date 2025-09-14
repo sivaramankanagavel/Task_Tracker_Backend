@@ -1,4 +1,5 @@
 const Task = require("../models/Task");
+const User = require("../models/User");
 const AppError = require("../utils/appError");
 
 class TaskService {
@@ -36,14 +37,11 @@ class TaskService {
       throw new AppError("Task not found", 404);
     }
 
-    if (
-      task.ownerId.toString() !== userId.toString() &&
-      task.assigneeId.toString() !== userId.toString()
-    ) {
+    if ((await User.findById(userId)).role !== 'ADMIN') {
       throw new AppError("Not authorized to update this task", 403);
     }
 
-    const allowedFields = ['description', 'dueDate', 'status', 'assigneeId', 'projectId'];
+    const allowedFields = ['description', 'dueDate', 'status', 'assigneeId', 'projectId', 'name'];
     if (Object.keys(updateData).length > 0) {
       Object.keys(updateData).forEach((key) => {
         if (!allowedFields.includes(key)) delete updateData[key];
@@ -58,14 +56,14 @@ class TaskService {
     return updatedTask;
   }
 
-  async deleteTask(id, userId) {
+  async deleteTask(id, userId, role) {
     const task = await Task.findById(id);
 
     if (!task) {
       throw new AppError("Task not found", 404);
     }
 
-    if (task.ownerId.toString() !== userId.toString()) {
+    if ((await User.findById(userId)).role !== 'ADMIN') {
       throw new AppError("Not authorized to delete this task", 403);
     }
 

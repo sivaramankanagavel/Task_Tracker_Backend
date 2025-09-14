@@ -55,7 +55,7 @@ class AuthService {
           name: firebaseUser.displayName || firebaseUser.email.split("@")[0],
           profilePicture: firebaseUser.photoURL || "",
           emailVerified: firebaseUser.emailVerified,
-          role: "USER",
+          role: "READ_ONLY_USER",
         });
       }
 

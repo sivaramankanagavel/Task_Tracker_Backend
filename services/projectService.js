@@ -30,10 +30,7 @@ class ProjectService {
   }
 
   async updateProject(id, updateData) {
-    const project = await Project.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
+    const project = await Project.findByIdAndUpdate(id, updateData);
     if (!project) {
       throw new AppError("Project not found", 404);
     }
