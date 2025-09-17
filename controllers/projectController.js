@@ -14,7 +14,7 @@ const getProjectById = catchAsync(async (req, res) => {
 const createProject = catchAsync(async (req, res) => {
   const project = await projectService.createProject({
     ...req.body,
-    ownerId: req.user._id
+    ownerId: req.body.ownerId
   });
   res.status(201).json(project);
 });
